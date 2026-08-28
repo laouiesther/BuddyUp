@@ -2,6 +2,7 @@
 // Paste this at the TOP of your App.jsx file
 
 import { useState, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
 
 // ─── PASSWORDS ────────────────────────────────────────────────────
 const STAFF_PASSWORD = "FC2026Staff";
@@ -1367,3 +1368,5 @@ function AppPreview() {
   );
 }
 }
+
+createRoot(document.getElementById("root")).render(<App />);
