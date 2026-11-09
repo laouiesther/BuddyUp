@@ -393,11 +393,27 @@ function VolunteerPlatform({volunteers,setVolunteers,pairings,children}) {
     if(!f){setLoginErr("Name not found. Please register first.");return;}
     setCurrentVol(f);setCheckedIn(f.approved?true:f.checkedIn?"pending":false);setScreen("home");setLoginErr("");
   };
-  const handleRegister=()=>{
-    if(!regName.trim()) return;
-    const nv={id:"v"+Date.now(),name:regName.trim(),emoji:regEmoji,skills:[],online:false,checkedIn:false,approved:false,matches:[],photos:[]};
-    setVolunteers(prev=>[...prev,nv]);setCurrentVol(nv);setScreen("survey");
-  };
+  const sendConfirmationSMS=async(name,phone)=>{
+  try{
+    await fetch("/.netlify/functions/send-sms",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({volunteerName:name,volunteerPhone:phone}),
+    });
+  }catch(err){
+    console.error("SMS error:",err);
+  }
+};
+
+const handleRegister=()=>{
+  if(!regName.trim()) return;
+  const nv={id:"v"+Date.now(),name:regName.trim(),phone:regPhone.trim(),emoji:regEmoji,skills:[],online:false,checkedIn:false,approved:false,matches:[],photos:[]};
+  setVolunteers(prev=>[...prev,nv]);
+  setCurrentVol(nv);
+  if(regPhone.trim()) sendConfirmationSMS(regName.trim(),regPhone.trim());
+  setScreen("survey");
+};
+
   const handleSurveyComplete=(answers)=>{
     const matched=computeMatches(answers,children);
     const topIds=matched.slice(0,3).map(c=>c.id);
@@ -461,9 +477,16 @@ function VolunteerPlatform({volunteers,setVolunteers,pairings,children}) {
       <div style={{marginTop:24,background:"white",borderRadius:20,padding:24,boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>
         <div style={{fontFamily:"'Fredoka One',cursive",fontSize:22,color:"#1e3a8a",marginBottom:4}}>Join Buddy Up! 🤝</div>
         <div style={{fontFamily:"'Nunito',sans-serif",fontSize:13,color:"#6b7280",marginBottom:16}}>Create your volunteer profile in seconds.</div>
+
         <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:11,color:"#1d4ed8",marginBottom:5}}>YOUR NAME</div>
         <input value={regName} onChange={e=>setRegName(e.target.value)} placeholder="Full name"
           style={{width:"100%",boxSizing:"border-box",padding:"11px 14px",borderRadius:10,border:"2px solid #e5e7eb",fontFamily:"'Nunito',sans-serif",fontSize:14,outline:"none",marginBottom:14}}/>
+
+        <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:11,color:"#1d4ed8",marginBottom:5}}>PHONE NUMBER</div>
+        <input value={regPhone} onChange={e=>setRegPhone(e.target.value)} placeholder="e.g. 7861234567" type="tel"
+          style={{width:"100%",boxSizing:"border-box",padding:"11px 14px",borderRadius:10,border:"2px solid #e5e7eb",fontFamily:"'Nunito',sans-serif",fontSize:14,outline:"none",marginBottom:6}}/>
+        <div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#6b7280",marginBottom:14}}>We'll text you a confirmation for your Sunday shift.</div>
+
         <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:11,color:"#1d4ed8",marginBottom:7}}>PICK YOUR AVATAR</div>
         <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:16}}>
           {emojis.map(e=><button key={e} onClick={()=>setRegEmoji(e)} style={{fontSize:22,background:regEmoji===e?"#dbeafe":"#f9fafb",border:regEmoji===e?"2px solid #2563eb":"2px solid #e5e7eb",borderRadius:10,padding:"5px 9px",cursor:"pointer"}}>{e}</button>)}
@@ -895,3 +918,5 @@ useEffect(() => {
       )}
     </div>
   );
+const [regEmoji,setRegEmoji]=useState("🙋");
+const [regPhone,setRegPhone]=useState("");
