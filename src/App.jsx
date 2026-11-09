@@ -824,14 +824,23 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
 // ─── ROOT APP ──────────────────────────────────────────────────────
 export default function App() {
   const [view,setView]=useState("split");
-  const [volunteers,setVolunteers]=useState(SEED_VOLUNTEERS);
-  const [pairings,setPairings]=useState(INITIAL_PAIRINGS);
-  const [children,setChildren]=useState(INITIAL_CHILDREN);
-  const [volPwOk,setVolPwOk]=useState(false);
-  const [staffPwOk,setStaffPwOk]=useState(false);
-  const [parentPwOk,setParentPwOk]=useState(false);
+const [volunteers,setVolunteers]=useState(() => {
+  const saved = localStorage.getItem("buddyup_volunteers");
+  return saved ? JSON.parse(saved) : SEED_VOLUNTEERS;
+});
+useEffect(() => {
+  localStorage.setItem("buddyup_volunteers", JSON.stringify(volunteers));
+}, [volunteers]);
+const [pairings,setPairings]=useState(INITIAL_PAIRINGS);
+const [children,setChildren]=useState(INITIAL_CHILDREN);
+const [volPwOk,setVolPwOk]=useState(false);
+const [staffPwOk,setStaffPwOk]=useState(false);
+const [parentPwOk,setParentPwOk]=useState(false);
 
-  useEffect(()=>{
+  const saved = localStorage.getItem("buddyup_children");
+  return saved ? JSON.parse(saved) : SEED_CHILDREN;
+};
+useEffect(() => {
     const link=document.createElement("link");
     link.href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap";
     link.rel="stylesheet";
@@ -886,4 +895,3 @@ export default function App() {
       )}
     </div>
   );
-}
