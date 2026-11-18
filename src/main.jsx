@@ -397,7 +397,15 @@ const [currentVol,setCurrentVol]=useState(savedVol);
   const [uploadNotif,setUploadNotif]=useState("");
   const emojis=["🙋","👦","👧","🧑","👩","👨","🧒"];
 
-  const handleLogin=()=>{
+ const handleLogin=()=>{
+  const f=volunteers.find(v=>v.name.toLowerCase()===loginName.toLowerCase());
+  if(!f){setLoginErr("Name not found. Please register first.");return;}
+  localStorage.setItem("buddyup_current_vol",f.id);
+  setCurrentVol(f);
+  setCheckedIn(f.approved?true:f.checkedIn?"pending":false);
+  setScreen(f.matches&&f.matches.length?"home":"survey");
+  setLoginErr("");
+};
     const f=volunteers.find(v=>v.name.toLowerCase()===loginName.toLowerCase());
     if(!f){setLoginErr("Name not found. Please register first.");return;}
     localStorage.setItem("buddyup_current_vol",f.id);
