@@ -382,10 +382,8 @@ function ParentPlatform({onAddChild}) {
 // Paste this AFTER Part 2
 
 function VolunteerPlatform({volunteers,setVolunteers,pairings,children}) {
- const savedId=localStorage.getItem("buddyup_current_vol");
-const savedVol=volunteers.find(v=>v.id===savedId)||null;
-const [screen,setScreen]=useState(savedVol?"home":"login");
-const [currentVol,setCurrentVol]=useState(savedVol);
+  const [screen,setScreen]=useState("login");
+  const [currentVol,setCurrentVol]=useState(null);
   const [loginName,setLoginName]=useState("");
   const [loginErr,setLoginErr]=useState("");
   const [regName,setRegName]=useState("");
@@ -397,24 +395,15 @@ const [currentVol,setCurrentVol]=useState(savedVol);
   const [uploadNotif,setUploadNotif]=useState("");
   const emojis=["🙋","👦","👧","🧑","👩","👨","🧒"];
 
- const handleLogin=()=>{
-  const f=volunteers.find(v=>v.name.toLowerCase()===loginName.toLowerCase());
-  if(!f){setLoginErr("Name not found. Please register first.");return;}
-  localStorage.setItem("buddyup_current_vol",f.id);
-  setCurrentVol(f);
-  setCheckedIn(f.approved?true:f.checkedIn?"pending":false);
-  setScreen(f.matches&&f.matches.length?"home":"survey");
-  setLoginErr("");
-};
+  const handleLogin=()=>{
     const f=volunteers.find(v=>v.name.toLowerCase()===loginName.toLowerCase());
     if(!f){setLoginErr("Name not found. Please register first.");return;}
-    localStorage.setItem("buddyup_current_vol",f.id);
-    setCurrentVol(f);setCheckedIn(f.approved?true:f.checkedIn?"pending":false);;
-  };setScreen(f.matches&&f.matches.length?"home":"survey")
+    setCurrentVol(f);setCheckedIn(f.approved?true:f.checkedIn?"pending":false);setScreen("home");setLoginErr("");
+  };
   const handleRegister=()=>{
     if(!regName.trim()) return;
     const nv={id:"v"+Date.now(),name:regName.trim(),emoji:regEmoji,skills:[],online:false,checkedIn:false,approved:false,matches:[],photos:[]};
-    setVolunteers(prev=>[...prev,nv]);setCurrentVol(nv);localStorage.setItem("buddyup_current_vol",nv.id);setScreen("survey");
+    setVolunteers(prev=>[...prev,nv]);setCurrentVol(nv);setScreen("survey");
   };
   const handleSurveyComplete=(answers)=>{
     const matched=computeMatches(answers,children);
@@ -539,7 +528,7 @@ const [currentVol,setCurrentVol]=useState(savedVol);
         </div>
         <div style={{display:"flex",gap:6}}>
           <button onClick={()=>setShowPhotoUpload(true)} style={{background:"#f0f7ff",border:"none",borderRadius:8,padding:"5px 10px",fontFamily:"'Nunito',sans-serif",fontSize:11,fontWeight:700,color:"#2563eb",cursor:"pointer"}}>📸 Share Photo</button>
-          <button onClick={()=>{localStorage.removeItem("buddyup_current_vol");setScreen("login");setCurrentVol(null);setCheckedIn(false);}} style={{background:"#f1f5f9",border:"none",borderRadius:8,padding:"5px 10px",fontFamily:"'Nunito',sans-serif",fontSize:11,fontWeight:700,color:"#6b7280",cursor:"pointer"}}>Sign Out</button>
+          <button onClick={()=>{setScreen("login");setCurrentVol(null);setCheckedIn(false);}} style={{background:"#f1f5f9",border:"none",borderRadius:8,padding:"5px 10px",fontFamily:"'Nunito',sans-serif",fontSize:11,fontWeight:700,color:"#6b7280",cursor:"pointer"}}>Sign Out</button>
         </div>
       </div>
 
@@ -577,17 +566,7 @@ const [currentVol,setCurrentVol]=useState(savedVol);
             <button onClick={handleCheckIn} style={{background:isApproved?"white":"linear-gradient(135deg,#2563eb,#60a5fa)",color:isApproved?"#dc2626":"white",border:isApproved?"2px solid #fca5a5":"none",borderRadius:10,padding:"10px 24px",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:13,cursor:"pointer"}}>{isApproved?"Check Out":"✅ Check In Now"}</button>
           </div>
         )}
-<div style={{background:"white",border:"2px solid #dbeafe",borderRadius:14,padding:14,marginBottom:16}}>
-  <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:8}}>📅 My Programs</div>
-  {PROGRAM_OPTIONS.map(p=>{
-    const mine=(volunteers.find(v=>v.id===currentVol?.id)?.programs)||[];
-    const on=mine.includes(p);
-    return <button key={p} onClick={()=>setVolunteers(prev=>prev.map(v=>v.id===currentVol.id?{...v,programs:on?mine.filter(x=>x!==p):[...mine,p]}:v))}
-      style={{display:"block",width:"100%",textAlign:"left",marginBottom:6,padding:"9px 12px",borderRadius:9,border:on?"2px solid #2563eb":"2px solid #e5e7eb",background:on?"#dbeafe":"white",fontFamily:"'Nunito',sans-serif",fontWeight:700,fontSize:13,color:on?"#1e3a8a":"#6b7280",cursor:"pointer"}}>
-      {on?"✅ ":""}{p}
-    </button>;
-  })}
-</div>
+
         {myChildren.length>0&&(
           <div style={{marginBottom:16}}>
             <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:8}}>👧 My Kids This Session</div>
@@ -651,29 +630,6 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
   const [selectedChild,setSelectedChild]=useState(null);
   const [showChildForm,setShowChildForm]=useState(false);
   const [childToEdit,setChildToEdit]=useState(null);
-  const [importProgram,setImportProgram]=useState("Sun Circle");
-const [importPreview,setImportPreview]=useState([]);
-
-const confirmImport=()=>{
-  const keyOf=v=>v.phone?v.phone.replace(/\D/g,""):(v.email||v.name).toLowerCase().replace(/\s/g,"");
-  setVolunteers(prev=>{
-    const updated=[...prev];
-    importPreview.forEach(nv=>{
-      const idx=updated.findIndex(v=>keyOf(v)===keyOf(nv));
-      if(idx>=0){
-        updated[idx]={...updated[idx],
-          programs:[...new Set([...(updated[idx].programs||[]),...nv.programs])],
-          phone:updated[idx].phone||nv.phone,
-          email:updated[idx].email||nv.email};
-      } else {
-        updated.push(nv);
-      }
-    });
-    return updated;
-  });
-  notify("✅ Imported "+importPreview.length+" volunteers");
-  setImportPreview([]);
-};
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3500);};
   const onlineVols=volunteers.filter(v=>v.online&&v.approved);
@@ -742,7 +698,7 @@ const confirmImport=()=>{
       )}
 
       <div style={{display:"flex",gap:6,padding:"11px 14px 0",flexWrap:"wrap"}}>
-        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"],["import","📥 Import"]].map(([id,label])=>(
+        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"]].map(([id,label])=>(
           <button key={id} onClick={()=>setActiveView(id)} style={{flex:1,minWidth:60,padding:"7px 3px",borderRadius:9,border:"2px solid",borderColor:activeView===id?"#2563eb":"#e5e7eb",background:activeView===id?"#2563eb":"white",color:activeView===id?"white":"#6b7280",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:10,cursor:"pointer"}}>{label}</button>
         ))}
       </div>
@@ -780,7 +736,7 @@ const confirmImport=()=>{
             {volunteers.map(v=>(
               <div key={v.id} style={{background:"white",border:v.online?"2px solid #34d399":"2px solid #e5e7eb",borderRadius:11,padding:11,marginBottom:7,display:"flex",alignItems:"center",gap:9}}>
                 <span style={{fontSize:24}}>{v.emoji}</span>
-                <div style={{flex:1}}><div style={{fontFamily:"'Fredoka One',cursive",fontSize:14,color:"#1e3a8a"}}>{v.name}</div><div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:2}}>{v.skills.slice(0,2).map(s=><Tag key={s} label={s}/>)}{(v.programs||[]).map(p=><Tag key={p} label={p} color="#d1fae5" text="#065f46"/>)}</div></div>
+                <div style={{flex:1}}><div style={{fontFamily:"'Fredoka One',cursive",fontSize:14,color:"#1e3a8a"}}>{v.name}</div><div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:2}}>{v.skills.slice(0,2).map(s=><Tag key={s} label={s}/>)}</div></div>
                 <div style={{display:"flex",alignItems:"center",gap:3}}><div style={{width:8,height:8,borderRadius:"50%",background:v.online?"#34d399":"#d1d5db"}}/><span style={{fontFamily:"'Nunito',sans-serif",fontSize:11,fontWeight:700,color:v.online?"#059669":"#9ca3af"}}>{v.online?"Online":"Offline"}</span></div>
               </div>
             ))}
@@ -822,31 +778,7 @@ const confirmImport=()=>{
             ))}
           </div>
         )}
-{activeView==="import"&&(
-  <div>
-    <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:3}}>📥 Import from VolunteerLocal</div>
-    <div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#6b7280",marginBottom:10}}>1) Pick the program. 2) Upload the CSV you exported. 3) Review and confirm.</div>
-    <select value={importProgram} onChange={e=>setImportProgram(e.target.value)} style={{width:"100%",padding:"9px 11px",borderRadius:9,border:"2px solid #e5e7eb",fontFamily:"'Nunito',sans-serif",fontSize:13,marginBottom:10}}>
-      {["Sun Circle","Social Circle","Volunteer Opportunities (8th Grade+)"].map(p=><option key={p} value={p}>{p}</option>)}
-    </select>
-    <input type="file" accept=".csv" onChange={e=>{
-      const f=e.target.files[0]; if(!f) return;
-      const r=new FileReader();
-      r.onload=ev=>setImportPreview(csvToVolunteers(ev.target.result,importProgram));
-      r.readAsText(f);
-    }} style={{marginBottom:12}}/>
-    {importPreview.length>0&&(
-      <div style={{background:"white",border:"2px solid #dbeafe",borderRadius:12,padding:12}}>
-        <div style={{fontFamily:"'Fredoka One',cursive",fontSize:15,color:"#1e3a8a",marginBottom:6}}>Found {importPreview.length} volunteers</div>
-        {importPreview.slice(0,5).map(v=>(
-          <div key={v.id} style={{fontFamily:"'Nunito',sans-serif",fontSize:12,color:"#374151",marginBottom:3}}>• {v.name} {v.phone?"· "+v.phone:""}</div>
-        ))}
-        {importPreview.length>5&&<div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#6b7280"}}>…and {importPreview.length-5} more</div>}
-        <button onClick={confirmImport} style={{marginTop:10,width:"100%",background:"linear-gradient(135deg,#2563eb,#60a5fa)",color:"white",border:"none",borderRadius:9,padding:"10px 0",fontFamily:"'Nunito',sans-serif",fontWeight:800,cursor:"pointer"}}>Import {importPreview.length} volunteers ✓</button>
-      </div>
-    )}
-  </div>
-)}
+
         {activeView==="photos"&&(
           <div>
             <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:3}}>📸 Volunteer Photos</div>
@@ -899,14 +831,7 @@ const confirmImport=()=>{
 // ─── ROOT APP ──────────────────────────────────────────────────────
 export default function App() {
   const [view,setView]=useState("split");
-  const   [volunteers,setVolunteers]=useState(()=>{
-  const saved=localStorage.getItem("buddyup_volunteers");
-  return saved?JSON.parse(saved):SEED_VOLUNTEERS;
-});
-useEffect(()=>{
-  localStorage.setItem("buddyup_volunteers",JSON.stringify(volunteers));
-},[volunteers]);
-
+  const [volunteers,setVolunteers]=useState(SEED_VOLUNTEERS);
   const [pairings,setPairings]=useState(INITIAL_PAIRINGS);
   const [children,setChildren]=useState(INITIAL_CHILDREN);
   const [volPwOk,setVolPwOk]=useState(false);
@@ -1045,56 +970,7 @@ const SAMPLE_CHILDREN = [
     ageGroup: "Teens (13–17)",
   },
 ];
-const PROGRAM_OPTIONS=["Sun Circle","Social Circle","Volunteer Opportunities (8th Grade+)"];
-function parseCSV(text){
-  const rows=[];let row=[],cell="",inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i],n=text[i+1];
-    if(inQ){
-      if(c==='"'&&n==='"'){cell+='"';i++;}
-      else if(c==='"'){inQ=false;}
-      else cell+=c;
-    } else {
-      if(c==='"') inQ=true;
-      else if(c===","){row.push(cell);cell="";}
-      else if(c==="\n"||c==="\r"){
-        if(c==="\r"&&n==="\n") i++;
-        row.push(cell);cell="";
-        if(row.some(x=>x.trim()!=="")) rows.push(row);
-        row=[];
-      } else cell+=c;
-    }
-  }
-  row.push(cell);
-  if(row.some(x=>x.trim()!=="")) rows.push(row);
-  return rows;
-}
 
-function csvToVolunteers(text,program){
-  const rows=parseCSV(text);
-  if(rows.length<2) return [];
-  const headers=rows[0].map(h=>h.trim().toLowerCase());
-  const find=(...keys)=>headers.findIndex(h=>keys.some(k=>h.includes(k)));
-  const iFirst=find("first name","firstname","first");
-  const iLast=find("last name","lastname","surname");
-  const iFull=headers.findIndex(h=>h==="name"||h==="full name"||h==="volunteer");
-  const iPhone=find("phone","mobile","cell");
-  const iEmail=find("email");
-  return rows.slice(1).map((r,i)=>{
-    const first=iFirst>=0?(r[iFirst]||"").trim():"";
-    const last=iLast>=0?(r[iLast]||"").trim():"";
-    const full=(first||last)?(first+" "+last).trim():(iFull>=0?(r[iFull]||"").trim():"");
-    return {
-      id:"vl"+Date.now()+"_"+i,
-      name:full,
-      phone:iPhone>=0?(r[iPhone]||"").trim():"",
-      email:iEmail>=0?(r[iEmail]||"").trim():"",
-      emoji:"🙋",skills:[],programs:[program],
-      online:false,checkedIn:false,approved:false,matches:[],photos:[],
-      importedFromVL:true,
-    };
-  }).filter(v=>v.name);
-}
 const AGE_GROUPS = ["Young Kids (5–8)", "Tweens (9–12)", "Teens (13–17)"];
 
 const SURVEY_QUESTIONS = [
