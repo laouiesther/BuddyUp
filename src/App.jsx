@@ -2,6 +2,7 @@
 // Paste this at the TOP of your App.jsx file
 
 import { useState, useEffect, useRef } from "react";
+import ImportTab from "./ImportTab.jsx";
 
 // ─── PASSWORDS ────────────────────────────────────────────────────
 const STAFF_PASSWORD = "FC2026Staff";
@@ -648,7 +649,7 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
     <div style={{maxWidth:680,margin:"0 auto"}}>
       <div style={{background:"linear-gradient(135deg,#1e3a8a,#2563eb)",padding:"16px 20px",display:"flex",alignItems:"center",gap:12}}>
         <span style={{fontSize:26}}>🖥️</span>
-        <div><div style={{fontFamily:"'Fredoka One',cursive",fontSize:19,color:"white"}}>Staff Dashboard</div><div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#bfdbfe",fontWeight:600}}>Sun Circle Program · Live View</div></div>
+        <div><div style={{fontFamily:"'Fredoka One',cursive",fontSize:19,color:"white"}}> Staff Dashboard TEST </div><div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#bfdbfe",fontWeight:600}}>Sun Circle Program · Live View</div></div>
         <div style={{marginLeft:"auto",display:"flex",gap:5,alignItems:"center"}}>
           <div style={{width:7,height:7,borderRadius:"50%",background:"#34d399"}}/>
           <span style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#34d399",fontWeight:700}}>{onlineVols.length} Online</span>
@@ -691,7 +692,7 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
       )}
 
       <div style={{display:"flex",gap:6,padding:"11px 14px 0",flexWrap:"wrap"}}>
-        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"]].map(([id,label])=>(
+        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"],["import","📥 Import"]].map(([id,label])=>(
           <button key={id} onClick={()=>setActiveView(id)} style={{flex:1,minWidth:60,padding:"7px 3px",borderRadius:9,border:"2px solid",borderColor:activeView===id?"#2563eb":"#e5e7eb",background:activeView===id?"#2563eb":"white",color:activeView===id?"white":"#6b7280",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:10,cursor:"pointer"}}>{label}</button>
         ))}
       </div>
@@ -771,7 +772,7 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
             ))}
           </div>
         )}
-
+{activeView==="import"&&<ImportTab volunteers={volunteers} setVolunteers={setVolunteers} notify={notify}/>} s
         {activeView==="photos"&&(
           <div>
             <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:3}}>📸 Volunteer Photos</div>
