@@ -2,6 +2,7 @@
 // Paste this at the TOP of your App.jsx file
 
 import { useState, useEffect, useRef } from "react";
+import ImportTab from "./ImportTab.jsx";
 import { createRoot } from "react-dom/client";
 
 // ─── PASSWORDS ────────────────────────────────────────────────────
@@ -698,7 +699,7 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
       )}
 
       <div style={{display:"flex",gap:6,padding:"11px 14px 0",flexWrap:"wrap"}}>
-        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"]].map(([id,label])=>(
+        {[["pairings","📋 Pairings"],["roster","👥 Roster"],["unpaired","⚠️ Unpaired"],["children","👧 Children"],["photos","📸 Photos"],["import","📥 Import"]].map(([id,label])=>(
           <button key={id} onClick={()=>setActiveView(id)} style={{flex:1,minWidth:60,padding:"7px 3px",borderRadius:9,border:"2px solid",borderColor:activeView===id?"#2563eb":"#e5e7eb",background:activeView===id?"#2563eb":"white",color:activeView===id?"white":"#6b7280",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:10,cursor:"pointer"}}>{label}</button>
         ))}
       </div>
@@ -779,7 +780,8 @@ function StaffPlatform({volunteers,setVolunteers,pairings,setPairings,children,s
           </div>
         )}
 
-        {activeView==="photos"&&(
+        {activeView==="import"&&<ImportTab volunteers={volunteers} setVolunteers={setVolunteers} notify={notify}/>}
+{activeView==="photos"&&(
           <div>
             <div style={{fontFamily:"'Fredoka One',cursive",fontSize:16,color:"#1e3a8a",marginBottom:3}}>📸 Volunteer Photos</div>
             <div style={{fontFamily:"'Nunito',sans-serif",fontSize:11,color:"#6b7280",marginBottom:9}}>🔒 Submitted by volunteers — staff eyes only.</div>
